@@ -53,6 +53,7 @@ class MysqlPasswordChangePlugin extends \RainLoop\Plugins\AbstractPlugin
             ->SetServerPass($this->Config()->Get('plugin', 'mysqlPass', ''))
             ->SetServerDatabase($this->Config()->Get('plugin', 'mysqlDatabase', ''))
             ->SetTableName($this->Config()->Get('plugin', 'dbUsersTable', ''))
+            ->SetKeyCol($this->Config()->Get('plugin', 'tableKeyCol', ''))
             ->SetUsersCol($this->Config()->Get('plugin', 'tableUsersCol', ''))
             ->SetPasswordCol($this->Config()->Get('plugin', 'tablePasswordCol', ''))
             ->SetEncryptScheme($this->Config()->Get('plugin', 'encryptScheme', ''))
@@ -81,6 +82,9 @@ class MysqlPasswordChangePlugin extends \RainLoop\Plugins\AbstractPlugin
             \RainLoop\Plugins\Property::NewInstance('dbUsersTable')
                 ->SetLabel('Users table name')
                 ->SetDefaultValue('users'),
+            \RainLoop\Plugins\Property::NewInstance('tableUsersCol')
+                ->SetLabel('ID (primary key) column name')
+                ->SetDefaultValue('id'),
             \RainLoop\Plugins\Property::NewInstance('tableUsersCol')
                 ->SetLabel('Users column name')
                 ->SetDefaultValue('email'),
