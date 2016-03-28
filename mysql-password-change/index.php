@@ -1,8 +1,6 @@
 <?php
 
-spl_autoload_register(function ($class) {
-    require __DIR__ . DIRECTORY_SEPARATOR . $class . '.php';
-});
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'MysqlPasswordChangeDriver.php';
 
 class MysqlPasswordChangePlugin extends \RainLoop\Plugins\AbstractPlugin
 {
@@ -82,7 +80,7 @@ class MysqlPasswordChangePlugin extends \RainLoop\Plugins\AbstractPlugin
             \RainLoop\Plugins\Property::NewInstance('dbUsersTable')
                 ->SetLabel('Users table name')
                 ->SetDefaultValue('users'),
-            \RainLoop\Plugins\Property::NewInstance('tableUsersCol')
+            \RainLoop\Plugins\Property::NewInstance('tableKeyCol')
                 ->SetLabel('ID (primary key) column name')
                 ->SetDefaultValue('id'),
             \RainLoop\Plugins\Property::NewInstance('tableUsersCol')
