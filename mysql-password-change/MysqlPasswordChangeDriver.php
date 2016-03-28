@@ -148,6 +148,8 @@ class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\Ch
     public function ChangePassword(\Rainloop\Account $oAccount, $sPrevPassword, $sNewPassword)
     {
 
+        unset($sPrevPassword);
+
         if ($this->_logger) {
             $this->_logger->Write('Changing password for user '.$oAccount->Email());
         }
@@ -159,28 +161,32 @@ class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\Ch
             $dsn = 'mysql:host='.$this->_mysqlHost.';port='.$this->_mysqlPort.';dbname='.$this->_dbName;
             $pdoObject = new \PDO($dsn, $this->_mysqlUser, $this->_mysqlPass, self::PDO_OPTIONS);
 
-
             // Get account from database
-            $stmtGetAccount = $pdoObject->prepare("SELECT {$this->_keyCol} AS id, {$this->_passwordCol} AS current_password FROM {$this->_tableName} WHERE {$this->_usersCol} = ? LIMIT 1");
+            $stmtGetAccount = $pdoObject->prepare("SELECT {$this->_keyCol} AS id FROM {$this->_tableName} WHERE {$this->_usersCol} = ? LIMIT 1");
             if ($stmtGetAccount->execute([$oAccount->Email()])) {
                 $mysqlAccount = $stmtGetAccount->fetch(\PDO::FETCH_ASSOC);
 
-                if (is_array($mysqlAccount) && array_key_exists('id', $mysqlAccount) &&
-                    array_key_exists('current_password', $mysqlAccount)) {
-                    // TODO: Implement password check based on current scheme
+                if (is_array($mysqlAccount) && array_key_exists('id', $mysqlAccount)) {
 
                     // Make password change
                     $newPassword = $this->_encrypt($sNewPassword, $pdoObject);
                     $stmtPassChange = $pdoObject->prepare("UPDATE {$this->_tableName} SET {$this->_passwordCol} = ? WHERE {$this->_keyCol} = ?");
 
                     // Returns whether the change was successful
-                    return (bool) $stmtPassChange->execute([$newPassword, $oAccount->Email()]);
+                    $stmtPassChange->execute([$newPassword, $mysqlAccount['id']]);
+
+                    if ($stmtPassChange->rowCount() !== 1) {
+                        $this->_logger->Write('Password could not be changed for only 1 user. Affected rows: ' . $stmtPassChange->rowCount());
+                        return false;
+                    } else {
+                        return true;
+                    }
 
                 } else {
                     $this->_logger->WriteException('Could not get your account from the database');
                 }
             } else {
-                $this->_logger->WriteException('An error occured looking up your account');
+                $this->_logger->WriteException('An error occurred looking up your account');
             }
         } catch (\Exception $e) {
             if ($this->_logger) {
