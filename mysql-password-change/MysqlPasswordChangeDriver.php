@@ -1,8 +1,6 @@
 <?php
 
-namespace Eightyknots;
-
-class MysqlPasswordChangeDriver implements \Rainloop\Providers\ChangePassword\ChangePasswordInterface
+class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\ChangePasswordInterface
 {
 
     const ALLOW_POOR_SECURITY = false;

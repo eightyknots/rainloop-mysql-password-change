@@ -1,6 +1,10 @@
 <?php
 
-class MysqlPasswordChangePlugin extends \Rainloop\Plugins\AbstractPlugin
+spl_autoload_register(function ($class) {
+    require __DIR__ . DIRECTORY_SEPARATOR . $class . '.php';
+});
+
+class MysqlPasswordChangePlugin extends \RainLoop\Plugins\AbstractPlugin
 {
     public function Init()
     {
@@ -16,7 +20,7 @@ class MysqlPasswordChangePlugin extends \Rainloop\Plugins\AbstractPlugin
 
         // Check for *either* OpenSSL ext or PHP 7 for mt_rand
         // This ensures better cryptographic values are used
-        if (!\Eightyknots\MysqlPasswordChangeDriver::ALLOW_POOR_SECURITY) {
+        if (!MysqlPasswordChangeDriver::ALLOW_POOR_SECURITY) {
             if (!function_exists('random_bytes') && !function_exists('openssl_random_pseudo_bytes')) {
                 return 'Could not find a cryptographically secure function to use for salts. ' .
                 'Please install PHP 7 (or the random_bytes() function) or the OpenSSL extension.';
@@ -41,9 +45,7 @@ class MysqlPasswordChangePlugin extends \Rainloop\Plugins\AbstractPlugin
             return;
         }
 
-        require_once __DIR__ . DIRECTORY_SEPARATOR . 'MysqlPasswordChangeDriver.php';
-
-        $oProvider = new \Eightyknots\MysqlPasswordChangeDriver;
+        $oProvider = new MysqlPasswordChangeDriver;
         $oProvider
             ->SetServerHost($this->Config()->Get('plugin', 'mysqlHost', ''))
             ->SetServerPort((int) $this->Config()->Get('plugin', 'mysqlPort', 3306))
@@ -88,7 +90,7 @@ class MysqlPasswordChangePlugin extends \Rainloop\Plugins\AbstractPlugin
             \RainLoop\Plugins\Property::NewInstance('encryptScheme')
                 ->SetLabel('Encryption scheme')
                 ->SetType(\RainLoop\Enumerations\PluginPropertyType::SELECTION)
-                ->SetDefaultValue(\Eightyknots\MysqlPasswordChangeDriver::SUPPORTED_PASSWORD_SCHEMES)
+                ->SetDefaultValue(MysqlPasswordChangeDriver::SUPPORTED_PASSWORD_SCHEMES)
                 ->SetDescription('Select the encryption scheme you are using to encrypt passwords on your MySQL server'),
             \RainLoop\Plugins\Property::NewInstance('encryptRounds')
                 ->SetLabel('SHA rounds')
