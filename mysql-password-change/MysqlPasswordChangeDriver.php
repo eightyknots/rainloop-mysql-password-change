@@ -257,7 +257,7 @@ class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\Ch
         if (function_exists('random_bytes')) {
             return str_replace('+', '.', substr(base64_encode(random_bytes(self::RANDOM_BYTES_SIZE)), 0, $length));
         } else if (function_exists('openssl_random_pseudo_bytes')) {
-            return str_replace('+', '.', substr(base64_encode(openssl_random_pseudo_bytes(self::RANDOM_BYTES_SIZE)), 0, $length);
+            return str_replace('+', '.', substr(base64_encode(openssl_random_pseudo_bytes(self::RANDOM_BYTES_SIZE)), 0, $length));
         } else if (self::ALLOW_POOR_SECURITY) {
             return substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789./"), 0, $length);
         } else {
