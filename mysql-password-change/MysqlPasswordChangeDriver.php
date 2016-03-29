@@ -5,7 +5,9 @@ class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\Ch
 
     const ALLOW_POOR_SECURITY = false;
 
-    const SUPPORTED_PASSWORD_SCHEMES = ['sha1', 'mysql', 'php', 'sha256_crypt', 'sha512_crypt'];
+    const SUPPORTED_PASSWORD_SCHEMES = ['sha512_crypt', 'sha256_crypt', 'blowfish_crypt', 'php', 'mysql', 'sha1'];
+
+    const RANDOM_BYTES_SIZE = 17;
 
     const PDO_OPTIONS = [
         \PDO::ATTR_PERSISTENT    => true,
@@ -215,8 +217,6 @@ class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\Ch
             }
         }
 
-        $salt = $this->_generateSalt();
-
         switch($this->_scheme) {
             case 'sha1':
                 return sha1($password);
@@ -224,14 +224,18 @@ class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\Ch
                 if (function_exists('password_hash')) {
                     return password_hash($password, PASSWORD_DEFAULT);
                 } else {
-                    throw new \Exception('"php" encryption was selected, but password_hash() is not found (PHP >= 5.5)');
+                    $this->_logger->WriteException('"php" encryption was selected, but password_hash() is not found (PHP >= 5.5)');
+                    return null;
                 }
             case 'mysql':
                 return $this->_mysqlEncrypt($password, $pdo);
+            case 'blowfish_crypt':
+                // TODO: Allow validated cost parameter if blowfish is selected
+                return crypt($password, '$2y$12$'.$this->_generateSalt(true));
             case 'sha256_crypt':
-                return crypt($password, '$5$rounds='.$this->_rounds.'$'.$salt);
+                return crypt($password, '$5$rounds='.$this->_rounds.'$'.$this->_generateSalt());
             case 'sha512_crypt':
-                return crypt($password, '$6$rounds='.$this->_rounds.'$'.$salt);
+                return crypt($password, '$6$rounds='.$this->_rounds.'$'.$this->_generateSalt());
             default:
                 $this->_logger->WriteException('Cannot find a suitable encryption algorithm to use!');
                 return null;
@@ -241,17 +245,21 @@ class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\Ch
     /**
      * Generates a (hopefully) cryptographically secure salt based on "good" random byte generators.
      * This is, of course, unless ALLOW_POOR_SECURITY is enabled, and does not require PHP 7 or OpenSSL.
+     * For Blowfish ($2y$) algorithms, the salt length is 22 characters. For SHA256/512 ($5$, $6$),
+     * the salt length is 16 characters.
      * @param int $length Salt length in bytes
      * @return string (Secure) Returns a hex-based salt (Insecure) Returns a 16-character random salt
      */
-    private function _generateSalt($length = 32)
+    private function _generateSalt($blowfish = false)
     {
+        $length = $blowfish ? 22 : 16;
+
         if (function_exists('random_bytes')) {
-            return bin2hex(random_bytes((int) $length));
+            return str_replace('+', '.', substr(base64_encode(random_bytes(self::RANDOM_BYTES_SIZE)), 0, $length));
         } else if (function_exists('openssl_random_pseudo_bytes')) {
-            return bin2hex(openssl_random_pseudo_bytes((int) $length));
+            return str_replace('+', '.', substr(base64_encode(openssl_random_pseudo_bytes(self::RANDOM_BYTES_SIZE)), 0, $length);
         } else if (self::ALLOW_POOR_SECURITY) {
-            return substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"), 0, 16);
+            return substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789./"), 0, $length);
         } else {
             $this->_logger->WriteException('Could not generate a salt because the required crypto-safe functions were not available.');
         }
