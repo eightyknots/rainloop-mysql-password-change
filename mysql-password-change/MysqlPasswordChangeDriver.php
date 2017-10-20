@@ -3,8 +3,6 @@
 class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\ChangePasswordInterface
 {
 
-    const ALLOW_POOR_SECURITY = false;
-
     const SUPPORTED_PASSWORD_SCHEMES = ['sha1', 'mysql', 'php', 'sha256_crypt', 'sha512_crypt'];
 
     const PDO_OPTIONS = [
@@ -239,8 +237,7 @@ class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\Ch
     }
 
     /**
-     * Generates a (hopefully) cryptographically secure salt based on "good" random byte generators.
-     * This is, of course, unless ALLOW_POOR_SECURITY is enabled, and does not require PHP 7 or OpenSSL.
+     * Generates a cryptographically secure salt based on "good" random byte generators.
      * @param int $length Salt length in bytes
      * @return string (Secure) Returns a hex-based salt (Insecure) Returns a 16-character random salt
      */
@@ -250,8 +247,6 @@ class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\Ch
             return bin2hex(random_bytes((int) $length));
         } else if (function_exists('openssl_random_pseudo_bytes')) {
             return bin2hex(openssl_random_pseudo_bytes((int) $length));
-        } else if (self::ALLOW_POOR_SECURITY) {
-            return substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"), 0, 16);
         } else {
             $this->_logger->WriteException('Could not generate a salt because the required crypto-safe functions were not available.');
         }
