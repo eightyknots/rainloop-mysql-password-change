@@ -7,11 +7,6 @@ class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\Ch
 {
 
     /**
-     * Do we allow poor security?
-     */
-    const ALLOW_POOR_SECURITY = false;
-
-    /**
      * Supported password schemes
      */
     const SUPPORTED_PASSWORD_SCHEMES = [
@@ -467,7 +462,6 @@ class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\Ch
 
     /**
      * Generates a (hopefully) cryptographically secure salt based on "good" random byte generators.
-     * This is, of course, unless ALLOW_POOR_SECURITY is enabled, and does not require PHP 7 or OpenSSL.
      * For Blowfish ($2y$) algorithms, the salt length is 22 characters. For SHA256/512 ($5$, $6$),
      * the salt length is 16 characters.
      *
@@ -486,10 +480,6 @@ class MysqlPasswordChangeDriver implements \RainLoop\Providers\ChangePassword\Ch
         else if (function_exists('openssl_random_pseudo_bytes'))
         {
             return str_replace('+', '.', substr(base64_encode(openssl_random_pseudo_bytes(self::RANDOM_BYTES_SIZE)), 0, $length));
-        }
-        else if (self::ALLOW_POOR_SECURITY)
-        {
-            return substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789./"), 0, $length);
         }
         else
         {

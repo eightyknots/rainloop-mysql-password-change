@@ -12,11 +12,8 @@ undergoing heavy development. **Do not use this plugin in production.**
 
 ### Minimum Requirements
 
-* PHP 5.4
+* PHP 5.6 with OpenSSL Extension or PHP 7.0+
 * PDO Extension with mysql driver
-
-If you do not have the [OpenSSL extension](https://secure.php.net/manual/en/book.openssl.php), or PHP 7,
-an error will be thrown unless you manually set ``ALLOW_POOR_SECURITY`` to ``true``.
 
 ### Recommended Requirements
 
